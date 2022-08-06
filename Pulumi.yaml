@@ -1,0 +1,6 @@
+name: personal-site-infra
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: Pulumi IaC for my personal portfolio site
