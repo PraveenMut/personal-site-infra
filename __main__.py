@@ -12,7 +12,7 @@ bootstrap_workers = ""
 
 ## Create SSH Keys
 default_key = do.SshKey(
-    "default", lambda p: open(p).read()("/Users/pxm021/do_test_keys/id_rsa.pub")
+    "default", lambda p: open(p).read()("/Users/praveen/do_test_keys/id_rsa.pub")
 )
 
 ## Provision Control Plane node(s)
