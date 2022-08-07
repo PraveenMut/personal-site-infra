@@ -2,13 +2,22 @@
 
 import pulumi
 import pulumi_digitalocean as do
+from typing import Type
 
-control_plane_nodes = 1
-worker_nodes = 2
-region = "nyc"
+control_plane_node_count: int = 1
+worker_node_count: int = 2
+region: str = "nyc"
 
-bootstrap_control_plane = ""
-bootstrap_workers = ""
+control_plane_nodes: list[Type[do.Droplet]]  = []
+worker_nodes: list[Type[do.Droplet]] = []
+
+
+bootstrap_control_plane = """#!/bin/bash
+    sudo yum update
+"""
+bootstrap_workers = """#!/bin/bash
+    sudo yum update
+"""
 
 ## Create SSH Keys
 default_key = do.SshKey(
@@ -28,6 +37,7 @@ for idx, droplet in enumerate(range(0, control_plane_nodes)):
         tags=[name_tag.id],
         user_data=bootstrap_control_plane,
     )
+    control_plane_nodes.append(droplet)
 
 ## Provision Worker Nodes
 for idx, droplet in enumerate(range(0, worker_nodes)):
@@ -42,6 +52,7 @@ for idx, droplet in enumerate(range(0, worker_nodes)):
         tags=[name_tag.id],
         user_data=bootstrap_workers,
     )
+    worker_nodes.append(droplet)
 
 ## Provision a LB with TLS termination for the rancher cluster.
 lb = do.LoadBalancer(
@@ -61,5 +72,8 @@ lb = do.LoadBalancer(
     ),
     region=region,
 )
+
+for node in (control_plane_nodes + worker_nodes):
+    pulumi.export("ip_address", node.ipv4_address)
 
 pulumi.export("endpoint", lb.ip)
