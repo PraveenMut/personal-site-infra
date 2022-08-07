@@ -11,14 +11,6 @@ region: str = "nyc"
 control_plane_nodes: list[Type[do.Droplet]]  = []
 worker_nodes: list[Type[do.Droplet]] = []
 
-
-bootstrap_control_plane = """#!/bin/bash
-    sudo yum update
-"""
-bootstrap_workers = """#!/bin/bash
-    sudo yum update
-"""
-
 ## Create SSH Keys
 default_key = do.SshKey(
     "default", lambda p: open(p).read()("/Users/praveen/do_test_keys/id_rsa.pub")
@@ -35,7 +27,6 @@ for idx, droplet in enumerate(range(0, control_plane_nodes)):
         ssh_keys=[default_key.fingerprint],
         size="s-1vcpu-2gb",
         tags=[name_tag.id],
-        user_data=bootstrap_control_plane,
     )
     control_plane_nodes.append(droplet)
 
@@ -50,7 +41,6 @@ for idx, droplet in enumerate(range(0, worker_nodes)):
         size="s-1vcpu-1gb",
         ssh_keys=[default_key.fingerprint],
         tags=[name_tag.id],
-        user_data=bootstrap_workers,
     )
     worker_nodes.append(droplet)
 
