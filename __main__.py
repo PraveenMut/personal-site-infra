@@ -16,9 +16,9 @@ for idx, droplet in enumerate(range(0, control_plane_nodes)):
     name_tag = do.Tag(instance_name)
     droplet = do.Droplet(
         instance_name,
-        image="",
+        image="rockylinux-8-4-x64",
         region=region,
-        size="2gb",
+        size="s-1vcpu-2gb",
         tags=[name_tag.id],
         user_data=bootstrap_control_plane,
     )
@@ -29,9 +29,10 @@ for idx, droplet in enumerate(range(0, worker_nodes)):
     name_tag = do.Tag(instance_name)
     droplet = do.Droplet(
         instance_name,
-        image="",
+        image="rockylinux-8-4-x64",
         region=region,
-        size="2gb",
+        size="s-1vcpu-1gb",
+        ssh_keys=[]
         tags=[name_tag.id],
         user_data=bootstrap_workers,
     )
@@ -45,6 +46,7 @@ lb = do.LoadBalancer(
             entry_port=443,
             entry_protocol="https",
             target_port="",
+            ssh_keys=[]
             target_protocol="https",
         )
     ],
