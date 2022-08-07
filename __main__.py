@@ -3,24 +3,27 @@
 import pulumi
 import pulumi_digitalocean as do
 from typing import Type
+from os import getenv
 
 control_plane_node_count: int = 1
 worker_node_count: int = 2
-region: str = "nyc"
+region: str = "nyc3"
 
 control_plane_nodes: list[Type[do.Droplet]]  = []
 worker_nodes: list[Type[do.Droplet]] = []
 
+ssh_public_key = getenv('SSH_PUB_KEY')
+
 ## Create SSH Keys
 default_key = do.SshKey(
-    "default", lambda p: open(p).read()("/Users/praveen/do_test_keys/id_rsa.pub")
+    "default", ssh_public_key
 )
 
 ## Provision Control Plane node(s)
-for idx, droplet in enumerate(range(0, control_plane_nodes)):
-    instance_name = f"control-plane-node-{idx+1}"
+for d in range(0, control_plane_node_count):
+    instance_name = f"control-plane-node-{d}"
     name_tag = do.Tag(instance_name)
-    droplet = do.Droplet(
+    cp_droplet = do.Droplet(
         instance_name,
         image="rockylinux-8-4-x64",
         region=region,
@@ -28,13 +31,13 @@ for idx, droplet in enumerate(range(0, control_plane_nodes)):
         size="s-1vcpu-2gb",
         tags=[name_tag.id],
     )
-    control_plane_nodes.append(droplet)
+    control_plane_nodes.append(cp_droplet)
 
 ## Provision Worker Nodes
-for idx, droplet in enumerate(range(0, worker_nodes)):
-    instance_name = f"worker-node-{idx+1}"
+for d in range(0, worker_node_count):
+    instance_name = f"worker-node-{d}"
     name_tag = do.Tag(instance_name)
-    droplet = do.Droplet(
+    worker_droplet = do.Droplet(
         instance_name,
         image="rockylinux-8-4-x64",
         region=region,
@@ -42,9 +45,9 @@ for idx, droplet in enumerate(range(0, worker_nodes)):
         ssh_keys=[default_key.fingerprint],
         tags=[name_tag.id],
     )
-    worker_nodes.append(droplet)
+    worker_nodes.append(worker_droplet)
 
-## Provision a LB with TLS termination for the rancher cluster.
+# Provision a LB with TLS termination for the rancher cluster.
 lb = do.LoadBalancer(
     "public",
     droplet_tag="external-lb",
@@ -63,7 +66,7 @@ lb = do.LoadBalancer(
     region=region,
 )
 
-for node in (control_plane_nodes + worker_nodes):
-    pulumi.export("ip_address", node.ipv4_address)
-
 pulumi.export("endpoint", lb.ip)
+
+for idx, node in enumerate((control_plane_nodes + worker_nodes)):
+    pulumi.export(f"ip_address-${idx}", node.ipv4_address)
