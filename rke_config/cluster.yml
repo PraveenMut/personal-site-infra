@@ -1,0 +1,10 @@
+nodes:
+  - address: '' # Public IPv4 address
+    internal_address: '' # Private IPv4 address
+    user: rancher
+    role: [controlplane, worker, etcd]
+    ssh_key_path: '~/do_test_keys/id_rsa'
+  - address: ''
+    internal_address: ''
+    role: [worker]
+    ssh_key_path: '~/do_test_keys/id_rsa'

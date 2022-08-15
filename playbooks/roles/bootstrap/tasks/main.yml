@@ -1,0 +1,71 @@
+---
+- name: Add rancher user
+  user:
+    name: rancher
+    comment: Service Account for rancher
+    append: yes
+    groups:
+      - users
+      - docker
+    home: '/home/rancher'
+    state: present
+    shell: '/bin/bash'
+
+- name: Set authorised SSH keys for the rancher user
+  ansible.posix.authorized_key:
+    user: rancher
+    state: present
+    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDC6Ljcndbil/ZgcqSU/CTkSfuzn1QwQ91T1cDlVcaBpOwPKaQSyhxahd5HtTUKAFsnVOFVJwYIWiW12QIdQGBf1tX8md/8mlLz0Ru14Vxwcb24U+hhjAaUr2hsfNuAyKBjI9nuHunImicqwt7DsNZpeO5lbKw7vS5Nd2DRGiMbEMktWuzE/2moHRd5UwwZZi46vowRkxGdN70lYQUwK3malcjF12VP2ASiOzGFBiZ6OmS8Jy+dZh+LaNG1PGDwrobNB+OBB/jjemwwRrOM9uuDLg2CDoqeReLhcaEe3J+8RsV49wFOnQiiWjJzBCAcKkNI/WT0QTdvIaU8IFX4TP7TSVWVm801uC/4jJZ8utY/30AaqO3OmQ99zTMP2+F8IhhsyyfJaXWTdMHdfqlJmIo4DqkSdcFapnoMgM6Zff4xiDc8mYbJfkHaa6ZRP31j0v2jPYiDVNtjU6T0v6T6xsI71CYMqCjgxzCF3Y7xepsRHlaYumXAefGpw4mmv73kG+0="
+
+- name: Add the rancher service account to sudoers
+  community.general.sudoers:
+    name: rancher
+    user: rancher
+    state: present
+    commands: ALL
+
+- name: Allow unrestricted egress between rancher nodes
+  community.general.ufw:
+    policy: allow
+    direction: outgoing
+
+- name: Open TCP ports for communication between nodes
+  community.general.ufw:
+    rule: allow
+    proto: tcp
+    from_port: '{{ item }}'
+  loop:
+    - '443'
+    - '2379'
+    - '2380'
+    - '6443'
+    - '8472'
+    - '9099'
+    - '10250'
+    - '10254'
+    - '10256'
+    - '8443'
+    - '2376'
+    -  '9100'
+    - '9443'
+    - '9796'
+    -  '6783'
+    - '30000:32767'
+
+- name: Open UDP ports for communication between nodes
+  community.general.ufw:
+    rule: allow
+    proto: udp
+    from_port: '{{ item }}'
+  loop:
+    - '8472'
+    - '4789'
+    - '6783'
+    - '6784'
+    - '3000:32767'
+
+- name: Open Port 80 for HTTP communication
+  community.general.ufw:
+    rule: allow
+    proto: tcp
+    from_port: '80'

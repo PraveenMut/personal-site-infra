@@ -1,0 +1,4 @@
+---
+- import_playbook: boootstrap.yml
+- import_playbook: ranchernode.yml
+- import_playbook: loadbalancer.yml
